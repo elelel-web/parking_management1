@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vehicle Parking Management System</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <i class="fas fa-parking"></i>
+                <h1>Parking Management</h1>
+            </div>
+            <div class="header-actions">
+                <button class="keyboard-help-btn" id="show-shortcuts">
+                    <i class="fas fa-keyboard"></i> Keyboard Shortcuts
+                </button>
+            </div>
+            <nav class="nav-tabs">
+                <button class="tab-btn active" data-tab="dashboard">
+                    <i class="fas fa-dashboard"></i> Dashboard
+                </button>
+                <button class="tab-btn" data-tab="entry">
+                    <i class="fas fa-sign-in-alt"></i> Vehicle Entry
+                </button>
+                <button class="tab-btn" data-tab="manage-vehicles">
+                    <i class="fas fa-car"></i> Manage Vehicles
+                </button>
+                <button class="tab-btn" data-tab="slots">
+                    <i class="fas fa-th"></i> Parking Layout
+                </button>
+                <button class="tab-btn" data-tab="reports">
+                    <i class="fas fa-chart-bar"></i> Reports
+                </button>
+            </nav>
+        </header>
+
+        <!-- Dashboard Tab -->
+        <div id="dashboard" class="tab-content active">
+            <h2>Dashboard Overview</h2>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-parking"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="total-slots">0</h3>
+                        <p>Total Slots</p>
+                    </div>
+                </div>
+                <div class="stat-card available">
+                    <div class="stat-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="available-slots">0</h3>
+                        <p>Available Slots</p>
+                    </div>
+                </div>
+                <div class="stat-card occupied">
+                    <div class="stat-icon">
+                        <i class="fas fa-times-circle"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="occupied-slots">0</h3>
+                        <p>Occupied Slots</p>
+                    </div>
+                </div>
+                <div class="stat-card revenue">
+                    <div class="stat-icon">
+                        <i class="fas fa-money-bill-wave"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="total-revenue">₱0.00</h3>
+                        <p>Today's Revenue</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="current-parking">
+                <h3>Currently Parked Vehicles</h3>
+                <div class="table-container">
+                    <table id="parked-vehicles-table">
+                        <thead>
+                            <tr>
+                                <th>Slot</th>
+                                <th>Vehicle Number</th>
+                                <th>Type</th>
+                                <th>Entry Time</th>
+                                <th>Duration</th>
+                            </tr>
+                        </thead>
+                        <tbody id="parked-vehicles-body">
+                            <tr>
+                                <td colspan="6" class="no-data">No vehicles currently parked</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Manage Vehicles Tab -->
+        <div id="manage-vehicles" class="tab-content">
+            <h2>Manage Vehicles</h2>
+            
+            <!-- Search and Exit Section -->
+            <div class="manage-vehicle-section">
+                <div class="section-header">
+                    <h3><i class="fas fa-search"></i> Search & Exit Vehicle</h3>
+                </div>
+                
+                <div class="form-container">
+                    <form id="exit-form">
+                        <div class="form-group">
+                            <label for="exit-vehicle-number">Vehicle Number *</label>
+                            <input type="text" id="exit-vehicle-number" name="vehicle_number" placeholder="Enter vehicle number" required>
+                        </div>
+                        <button type="button" class="btn btn-secondary" id="search-vehicle">
+                            <i class="fas fa-search"></i> Search Vehicle
+                        </button>
+                    </form>
+
+                    <div id="vehicle-info" class="vehicle-info" style="display: none;">
+                        <h3>Vehicle Information</h3>
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <strong>Vehicle Number:</strong>
+                                <span id="info-vehicle-number"></span>
+                            </div>
+                            <div class="info-item">
+                                <strong>Type:</strong>
+                                <span id="info-vehicle-type"></span>
+                            </div>
+                            <div class="info-item">
+                                <strong>Slot Number:</strong>
+                                <span id="info-slot-number"></span>
+                            </div>
+                            <div class="info-item">
+                                <strong>Entry Time:</strong>
+                                <span id="info-entry-time"></span>
+                            </div>
+                            <div class="info-item">
+                                <strong>Duration:</strong>
+                                <span id="info-duration"></span>
+                            </div>
+                            <div class="info-item total-fee">
+                                <strong>Total Parking Fee:</strong>
+                                <span id="info-parking-fee"></span>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-danger" id="process-exit">
+                            <i class="fas fa-sign-out-alt"></i> Process Exit & Print Receipt
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- All Parked Vehicles Section -->
+            <div class="manage-vehicle-section">
+                <div class="section-header">
+                    <h3><i class="fas fa-list"></i> Currently Parked Vehicles</h3>
+                    <button class="btn btn-primary btn-small" id="refresh-parked-vehicles">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                </div>
+                
+                <div class="table-container">
+                    <table id="all-parked-vehicles-table">
+                        <thead>
+                            <tr>
+                                <th>Slot</th>
+                                <th>Vehicle Number</th>
+                                <th>Type</th>
+        
+                                <th>Entry Time</th>
+                                <th>Duration</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="all-parked-vehicles-body">
+                            <tr>
+                                <td colspan="8" class="no-data">Loading...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vehicle Entry Tab -->
+        <div id="entry" class="tab-content">
+            <h2>Vehicle Entry</h2>
+            <div class="form-container">
+                <form id="entry-form">
+                    <div class="form-group">
+                        <label for="vehicle-number">Vehicle Number *</label>
+                        <input type="text" id="vehicle-number" name="vehicle_number" placeholder="e.g., ABC-1234" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="vehicle-type">Vehicle Type *</label>
+                        <select id="vehicle-type" name="vehicle_type" required>
+                            <option value="">Select Type</option>
+                            <option value="two_wheeler">Two Wheeler</option>
+                            <option value="four_wheeler">Four Wheeler</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="slot-select">Available Parking Slot *</label>
+                        <select id="slot-select" name="slot_id" required>
+                            <option value="">Select vehicle type first</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn btn-success btn-park">
+                        <i class="fas fa-parking"></i> Park Vehicle & Print Ticket
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Manage Slots Tab -->
+        <div id="slots" class="tab-content">
+            <h2>Parking Layout Overview</h2>
+            
+            <div class="parking-legend">
+                <div class="legend-item">
+                    <div class="legend-box available"></div>
+                    <span>Available</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-box occupied"></div>
+                    <span>Occupied</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-box handicapped"></div>
+                    <span>Handicapped</span>
+                </div>
+            </div>
+
+            <div class="parking-layout">
+                <!-- Ground Floor Section -->
+                <div class="floor-section">
+                    <h3 class="floor-title"><i class="fas fa-layer-group"></i> Ground Floor</h3>
+                    
+                    <div class="zone-container">
+                        <div class="parking-zone">
+                            <div class="zone-header">
+                                <i class="fas fa-motorcycle"></i> Zone A - Two Wheeler Parking
+                            </div>
+                            <div class="slot-row" id="zone-a-slots">
+                                <!-- Two wheeler slots will be loaded here -->
+                            </div>
+                        </div>
+
+                        <div class="parking-zone">
+                            <div class="zone-header">
+                                <i class="fas fa-car"></i> Zone B - Four Wheeler Parking
+                            </div>
+                            <div class="slot-row" id="zone-b-slots">
+                                <!-- Four wheeler slots will be loaded here -->
+                            </div>
+                        </div>
+
+                        <div class="parking-zone special">
+                            <div class="zone-header">
+                                <i class="fas fa-wheelchair"></i> Priority Parking (Handicapped)
+                            </div>
+                            <div class="slot-row" id="zone-h-slots">
+                                <!-- Handicapped slots will be loaded here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reports Tab -->
+        <div id="reports" class="tab-content">
+            <h2>Parking Reports</h2>
+            
+            <div class="report-filters">
+                <div class="form-group">
+                    <label for="report-date-from">From Date</label>
+                    <input type="date" id="report-date-from">
+                </div>
+                <div class="form-group">
+                    <label for="report-date-to">To Date</label>
+                    <input type="date" id="report-date-to">
+                </div>
+                <button class="btn btn-primary" id="generate-report">
+                    <i class="fas fa-file-pdf"></i> Generate Report
+                </button>
+            </div>
+
+            <div class="table-container">
+                <table id="reports-table">
+                    <thead>
+                        <tr>
+                            <th>Vehicle Number</th>
+                            <th>Type</th>
+                            <th>Slot</th>
+                            <th>Entry Time</th>
+                            <th>Exit Time</th>
+                            <th>Duration</th>
+                            <th>Fee</th>
+                        </tr>
+                    </thead>
+                    <tbody id="reports-body">
+                        <tr>
+                            <td colspan="8" class="no-data">Select date range and click Generate Report</td>
+                        </tr>
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="7" style="text-align: right;"><strong>Total Revenue:</strong></td>
+                            <td><strong id="report-total">₱0.00</strong></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Parking Ticket Modal -->
+    <div id="ticket-modal" class="modal">
+        <div class="modal-content ticket-content">
+            <div id="ticket-print-area">
+                <div class="ticket-header">
+                    <h2>🅿️ PARKING TICKET</h2>
+                    <p class="facility-name">Vehicle Parking Management System</p>
+                </div>
+                <div class="ticket-body" id="ticket-details">
+                    <!-- Ticket details will be inserted here -->
+                </div>
+                <div class="ticket-footer">
+                    <p>Please keep this ticket safe</p>
+                    <p>Present this ticket when exiting</p>
+                </div>
+            </div>
+            <div class="ticket-actions">
+                <button class="btn btn-primary" onclick="window.print()">
+                    <i class="fas fa-print"></i> Print Ticket
+                </button>
+                <button class="btn btn-secondary close">
+                    <i class="fas fa-times"></i> Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Receipt Modal -->
+    <div id="receipt-modal" class="modal">
+        <div class="modal-content receipt-modal-content">
+            <div id="receipt-print-area">
+                <div class="receipt-header">
+                    <h2>🧾 PARKING RECEIPT</h2>
+                    <p class="facility-name">Vehicle Parking Management System</p>
+                    <div class="receipt-date" id="receipt-date"></div>
+                </div>
+                <div class="receipt-body" id="receipt-details">
+                    <!-- Receipt details will be inserted here -->
+                </div>
+                <div class="receipt-footer">
+                    <p>✓ Payment Received - Thank You!</p>
+                    <p>Drive Safely!</p>
+                </div>
+            </div>
+            <div class="receipt-actions">
+                <button class="btn btn-primary" onclick="window.print()">
+                    <i class="fas fa-print"></i> Print Receipt
+                </button>
+                <button class="btn btn-secondary close">
+                    <i class="fas fa-times"></i> Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Keyboard Shortcuts Modal -->
+    <div id="shortcuts-modal" class="modal">
+        <div class="modal-content shortcuts-content">
+            <span class="close">&times;</span>
+            <h2><i class="fas fa-keyboard"></i> Keyboard Shortcuts</h2>
+            
+            <div class="shortcuts-grid">
+                <div class="shortcut-section">
+                    <h3>Navigation</h3>
+                    <div class="shortcut-item">
+                        <kbd>Alt</kbd> + <kbd>1</kbd>
+                        <span>Go to Dashboard</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <kbd>Alt</kbd> + <kbd>2</kbd>
+                        <span>Go to Vehicle Entry</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <kbd>Alt</kbd> + <kbd>3</kbd>
+                        <span>Go to Manage Vehicles</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <kbd>Alt</kbd> + <kbd>4</kbd>
+                        <span>Go to Parking Layout</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <kbd>Alt</kbd> + <kbd>5</kbd>
+                        <span>Go to Reports</span>
+                    </div>
+                </div>
+
+                <div class="shortcut-section">
+                    <h3>Actions</h3>
+                    <div class="shortcut-item">
+                        <kbd>Ctrl</kbd> + <kbd>S</kbd>
+                        <span>Save/Submit Active Form</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <kbd>Enter</kbd>
+                        <span>Search Vehicle / Next Field</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <kbd>F5</kbd>
+                        <span>Refresh Dashboard Data</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <kbd>Esc</kbd>
+                        <span>Close Modal/Panel</span>
+                    </div>
+                </div>
+
+                <div class="shortcut-section">
+                    <h3>Form Navigation</h3>
+                    <div class="shortcut-item">
+                        <kbd>↑</kbd> Arrow Up
+                        <span>Previous Field</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <kbd>↓</kbd> Arrow Down
+                        <span>Next Field</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <kbd>Tab</kbd>
+                        <span>Next Field (Standard)</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="shortcuts-footer">
+                <p><i class="fas fa-info-circle"></i> Press <kbd>?</kbd> to show/hide this panel anytime</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
