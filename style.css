@@ -740,6 +740,8 @@ tbody tr:hover {
     height: 100%;
     background-color: rgba(0, 0, 0, 0.5);
     animation: fadeIn 0.3s ease;
+    overflow-x: hidden;
+    overflow-y: auto;
 }
 
 .modal-content {
@@ -751,6 +753,7 @@ tbody tr:hover {
     max-width: 500px;
     position: relative;
     animation: slideDown 0.3s ease;
+    overflow-x: hidden;
 }
 
 @keyframes slideDown {
@@ -783,7 +786,8 @@ tbody tr:hover {
     width: 90%;
     background: white;
     padding: 0;
-    overflow: visible;
+    overflow-x: hidden;
+    overflow-y: auto;
     margin: 2% auto;
     max-height: 90vh;
     display: flex;
@@ -792,6 +796,7 @@ tbody tr:hover {
 
 #receipt-print-area {
     overflow-y: auto;
+    overflow-x: hidden;
     flex: 1;
 }
 
