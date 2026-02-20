@@ -51,8 +51,8 @@ try {
     $slot_data = $result->fetch_assoc();
     $slot_number = $slot_data['slot_number'];
     
-    // Generate random ticket number (8 digits)
-    $ticket_number = strtoupper(substr(md5(uniqid(rand(), true)), 0, 8));
+    // Use slot number as ticket number (e.g., A-001 becomes A001)
+    $ticket_number = str_replace('-', '', $slot_number);
     
     // Insert or update vehicle (with dummy owner data since DB requires it)
     $vehicle_id = null;
