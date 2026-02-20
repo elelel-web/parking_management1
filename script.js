@@ -609,16 +609,6 @@ $(document).ready(function() {
                 </tr>
             </table>
             <div class="ticket-divider"></div>
-            <div class="ticket-notice">
-                <div class="notice-icon">⚠️</div>
-                <div class="notice-title">IMPORTANT PRIVACY NOTICE</div>
-                <div class="notice-text">
-                    <p>• In case of emergency, you will be paged using your <strong>TICKET NUMBER</strong> only.</p>
-                    <p>• Your plate number will <strong>NOT</strong> be announced publicly to protect your privacy.</p>
-                    <p>• Please <strong>KEEP THIS TICKET SAFE</strong> and remember your ticket number.</p>
-                </div>
-            </div>
-            <div class="ticket-divider"></div>
             <div class="ticket-rates">
                 <p><strong>Parking Rates:</strong></p>
                 <p>${ticketData.vehicle_type === 'two_wheeler' ? '₱10 first hour, ₱5 additional' : '₱20 first hour, ₱10 additional'}</p>
