@@ -132,12 +132,24 @@ $(document).ready(function() {
     
     // Close shortcuts modal
     $('.close').click(function() {
-        $(this).closest('.modal').hide();
+        const modal = $(this).closest('.modal');
+        modal.hide();
+        
+        // If closing receipt modal, refresh the parked vehicles table
+        if (modal.attr('id') === 'receipt-modal') {
+            loadAllParkedVehicles();
+        }
     });
     
     $(window).click(function(event) {
         if ($(event.target).hasClass('modal')) {
+            const modalId = $(event.target).attr('id');
             $('.modal').hide();
+            
+            // If closing receipt modal, refresh the parked vehicles table
+            if (modalId === 'receipt-modal') {
+                loadAllParkedVehicles();
+            }
         }
     });
     
@@ -246,6 +258,14 @@ $(document).ready(function() {
                         $('#exit-form')[0].reset();
                         $('#vehicle-info').hide();
                         showMessage('success', 'Vehicle exit processed successfully!');
+                        
+                        // Refresh the parked vehicles table
+                        loadAllParkedVehicles();
+                        
+                        // Also refresh dashboard if on that tab
+                        if ($('.tab-btn[data-tab="dashboard"]').hasClass('active')) {
+                            loadDashboard();
+                        }
                     } else {
                         showMessage('error', response.message);
                     }
@@ -372,6 +392,7 @@ $(document).ready(function() {
                     <td>${vehicle.slot_number}</td>
                     <td><strong>${vehicle.vehicle_number}</strong></td>
                     <td>${vehicle.vehicle_type.replace('_', ' ')}</td>
+                    <td>${vehicle.owner_name}</td>
                     <td>${formatDateTime(vehicle.entry_time)}</td>
                     <td>${vehicle.duration}</td>
                 </tr>
@@ -384,6 +405,8 @@ $(document).ready(function() {
     function displayVehicleInfo(data) {
         $('#info-vehicle-number').text(data.vehicle_number);
         $('#info-vehicle-type').text(data.vehicle_type.replace('_', ' '));
+        $('#info-owner-name').text(data.owner_name);
+        $('#info-owner-phone').text(data.owner_phone);
         $('#info-slot-number').text(data.slot_number);
         $('#info-entry-time').text(formatDateTime(data.entry_time));
         $('#info-duration').text(data.duration);
@@ -471,6 +494,7 @@ $(document).ready(function() {
                 <tr>
                     <td>${record.vehicle_number}</td>
                     <td>${record.vehicle_type.replace('_', ' ')}</td>
+                    <td>${record.owner_name}</td>
                     <td>${record.slot_number}</td>
                     <td>${formatDateTime(record.entry_time)}</td>
                     <td>${formatDateTime(record.exit_time)}</td>
@@ -585,6 +609,16 @@ $(document).ready(function() {
                 </tr>
             </table>
             <div class="ticket-divider"></div>
+            <div class="ticket-notice">
+                <div class="notice-icon">⚠️</div>
+                <div class="notice-title">IMPORTANT PRIVACY NOTICE</div>
+                <div class="notice-text">
+                    <p>• In case of emergency, you will be paged using your <strong>TICKET NUMBER</strong> only.</p>
+                    <p>• Your plate number will <strong>NOT</strong> be announced publicly to protect your privacy.</p>
+                    <p>• Please <strong>KEEP THIS TICKET SAFE</strong> and remember your ticket number.</p>
+                </div>
+            </div>
+            <div class="ticket-divider"></div>
             <div class="ticket-rates">
                 <p><strong>Parking Rates:</strong></p>
                 <p>${ticketData.vehicle_type === 'two_wheeler' ? '₱10 first hour, ₱5 additional' : '₱20 first hour, ₱10 additional'}</p>
@@ -636,7 +670,7 @@ $(document).ready(function() {
         const tbody = $('#all-parked-vehicles-body');
         
         if (!vehicles || vehicles.length === 0) {
-            tbody.html('<tr><td colspan="8" class="no-data">No vehicles currently parked</td></tr>');
+            tbody.html('<tr><td colspan="6" class="no-data">No vehicles currently parked</td></tr>');
             return;
         }
         
@@ -646,9 +680,9 @@ $(document).ready(function() {
                 <tr>
                     <td><strong>${vehicle.slot_number}</strong></td>
                     <td><strong>${vehicle.vehicle_number}</strong></td>
-                    <td>${vehicle.vehicle_type.replace('_', ' ')}</td>
+                    <td>${vehicle.vehicle_type.replace('_', ' ').toUpperCase()}</td>
                     <td>${formatDateTime(vehicle.entry_time)}</td>
-                    <td>${vehicle.duration}</td>
+                    <td><span class="duration-badge">${vehicle.duration}</span></td>
                     <td>
                         <button class="btn btn-danger btn-small quick-exit-btn" data-vehicle="${vehicle.vehicle_number}">
                             <i class="fas fa-sign-out-alt"></i> Exit
