@@ -54,7 +54,7 @@ try {
     // Use slot number as ticket number (e.g., A-001 becomes A001)
     $ticket_number = str_replace('-', '', $slot_number);
     
-    // Insert or update vehicle (with dummy owner data since DB requires it)
+    // Insert or update vehicle
     $vehicle_id = null;
     $check_vehicle = "SELECT id FROM vehicles WHERE vehicle_number = ?";
     $stmt = $conn->prepare($check_vehicle);
@@ -62,22 +62,19 @@ try {
     $stmt->execute();
     $result = $stmt->get_result();
     
-    $owner_name = "N/A";
-    $owner_phone = "N/A";
-    
     if ($result->num_rows > 0) {
         $vehicle_id = $result->fetch_assoc()['id'];
-        // Update vehicle details
-        $update_query = "UPDATE vehicles SET vehicle_type = ?, owner_name = ?, owner_phone = ? WHERE id = ?";
+        // Update vehicle type
+        $update_query = "UPDATE vehicles SET vehicle_type = ? WHERE id = ?";
         $stmt = $conn->prepare($update_query);
-        $stmt->bind_param('sssi', $vehicle_type, $owner_name, $owner_phone, $vehicle_id);
+        $stmt->bind_param('si', $vehicle_type, $vehicle_id);
         $stmt->execute();
     } else {
         // Insert new vehicle
-        $insert_query = "INSERT INTO vehicles (vehicle_number, vehicle_type, owner_name, owner_phone) 
-                        VALUES (?, ?, ?, ?)";
+        $insert_query = "INSERT INTO vehicles (vehicle_number, vehicle_type) 
+                        VALUES (?, ?)";
         $stmt = $conn->prepare($insert_query);
-        $stmt->bind_param('ssss', $vehicle_number, $vehicle_type, $owner_name, $owner_phone);
+        $stmt->bind_param('ss', $vehicle_number, $vehicle_type);
         $stmt->execute();
         $vehicle_id = $conn->insert_id;
     }
