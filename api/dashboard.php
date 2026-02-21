@@ -27,7 +27,7 @@ try {
     $today_revenue = $revenue_result->fetch_assoc()['revenue'] ?? 0;
     
     // Get currently parked vehicles
-    $parked_query = "SELECT pr.*, v.vehicle_number, v.vehicle_type, v.owner_name, 
+    $parked_query = "SELECT pr.*, v.vehicle_number, v.vehicle_type, 
                             ps.slot_number,
                             TIMESTAMPDIFF(MINUTE, pr.entry_time, NOW()) as minutes_parked
                      FROM parking_records pr
