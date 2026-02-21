@@ -15,7 +15,7 @@ try {
     $conn->begin_transaction();
     
     // Get parking record
-    $query = "SELECT pr.*, v.vehicle_number, v.vehicle_type, v.owner_name, v.owner_phone,
+    $query = "SELECT pr.*, v.vehicle_number, v.vehicle_type,
                      ps.slot_number, ps.id as slot_id, p.first_hour_rate, p.additional_hour_rate,
                      TIMESTAMPDIFF(MINUTE, pr.entry_time, NOW()) as minutes_parked
               FROM parking_records pr
@@ -78,7 +78,6 @@ try {
             'record_id' => $parking_data['id'],
             'vehicle_number' => $parking_data['vehicle_number'],
             'vehicle_type' => $parking_data['vehicle_type'],
-            'owner_name' => $parking_data['owner_name'],
             'slot_number' => $parking_data['slot_number'],
             'entry_time' => $parking_data['entry_time'],
             'exit_time' => $exit_time,
