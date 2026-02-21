@@ -14,7 +14,7 @@ $date_to = $data['date_to'] . ' 23:59:59';
 
 try {
     // Get parking records within date range
-    $query = "SELECT pr.*, v.vehicle_number, v.vehicle_type, v.owner_name,
+    $query = "SELECT pr.*, v.vehicle_number, v.vehicle_type,
                      ps.slot_number,
                      TIMESTAMPDIFF(MINUTE, pr.entry_time, pr.exit_time) as minutes_parked
               FROM parking_records pr
