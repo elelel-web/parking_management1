@@ -12,7 +12,7 @@ if (!$data || empty($data['vehicle_number'])) {
 $vehicle_number = strtoupper(trim($data['vehicle_number']));
 
 try {
-    $query = "SELECT pr.*, v.vehicle_number, v.vehicle_type, v.owner_name, v.owner_phone,
+    $query = "SELECT pr.*, v.vehicle_number, v.vehicle_type,
                      ps.slot_number, p.first_hour_rate, p.additional_hour_rate,
                      TIMESTAMPDIFF(MINUTE, pr.entry_time, NOW()) as minutes_parked
               FROM parking_records pr
