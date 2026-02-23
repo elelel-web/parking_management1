@@ -347,10 +347,8 @@ body {
 }
 
 .btn-park {
-    width: 100%;
-    padding: 12px 24px;
-    font-size: 14px;
-    font-weight: 600;
+    width: 10%;      /* ✅ Only 30% of form width */
+    min-width: 190px; /* ✅ Never smaller than 200px */
 }
 
 /* Tables */
