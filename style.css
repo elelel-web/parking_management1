@@ -13,7 +13,7 @@
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #d4c5b9 0%, #e8dfd5 50%, #f5f1ed 100%);
+    background: linear-gradient(135deg, #2c2c2c 0%, #4a4a4a 50%, #6e6e6e 100%);
     min-height: 100vh;
     padding: 15px;
 }
@@ -21,18 +21,18 @@ body {
 .container {
     max-width: 1600px;
     margin: 0 auto;
-    background: #faf7f2;
+    background: #f5f5f5;
     border-radius: 20px;
-    box-shadow: 0 15px 60px rgba(157, 139, 112, 0.2);
+    box-shadow: 0 15px 60px rgba(0, 0, 0, 0.4);
     overflow: hidden;
 }
 
 /* Header */
 .header {
-    background: linear-gradient(135deg, #9d8b70 0%, #b5a593 50%, #c9baa7 100%);
+    background: linear-gradient(135deg, #3a3a3a 0%, #4f4f4f 50%, #5a5a5a 100%);
     color: white;
     padding: 20px 40px;
-    box-shadow: 0 4px 20px rgba(157, 139, 112, 0.3);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
 }
 
 .logo {
@@ -45,7 +45,7 @@ body {
 .logo i {
     font-size: 42px;
     background: white;
-    color: #9d8b70;
+    color: #5a5a5a;
     padding: 12px;
     border-radius: 10px;
     box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
@@ -119,9 +119,9 @@ body {
 
 .tab-btn.active {
     background: white;
-    color: #9d8b70;
+    color: #3a3a3a;
     font-weight: 700;
-    box-shadow: 0 3px 10px rgba(157, 139, 112, 0.3);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
 }
 
 /* Tab Content */
@@ -150,7 +150,7 @@ body {
     color: #2c3e50;
     margin-bottom: 25px;
     font-size: 24px;
-    border-bottom: 3px solid #9d8b70;
+    border-bottom: 3px solid #5a5a5a;
     padding-bottom: 10px;
     display: inline-block;
 }
@@ -221,7 +221,7 @@ body {
     align-items: center;
     justify-content: center;
     border-radius: 15px;
-    color: #9d8b70;
+    color: #5a5a5a;
     background: linear-gradient(135deg, #e9e9f5 0%, #d4d4ee 100%);
     flex-shrink: 0;
     position: relative;
@@ -235,6 +235,7 @@ body {
     line-height: 1;
     display: block;
 }
+
 
 .stat-info h3 {
     font-size: 36px;
@@ -289,7 +290,7 @@ body {
 .form-group input:focus,
 .form-group select:focus {
     outline: none;
-    border-color: #9d8b70;
+    border-color: #5a5a5a;
 }
 
 /* Buttons */
@@ -307,13 +308,13 @@ body {
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, #9d8b70 0%, #b5a593 100%);
+    background: linear-gradient(135deg, #4a4a4a 0%, #5a5a5a 100%);
     color: white;
 }
 
 .btn-primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(157, 139, 112, 0.4);
+    box-shadow: 0 5px 15px rgba(74, 74, 74, 0.5);
 }
 
 .btn-secondary {
@@ -336,13 +337,13 @@ body {
 }
 
 .btn-success {
-    background: linear-gradient(135deg, #9d8b70 0%, #b5a593 100%);
+    background: linear-gradient(135deg, #4a4a4a 0%, #5a5a5a 100%);
     color: white;
 }
 
 .btn-success:hover {
     transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(157, 139, 112, 0.4);
+    box-shadow: 0 5px 15px rgba(74, 74, 74, 0.5);
 }
 
 .btn-park {
@@ -441,7 +442,7 @@ tbody tr:hover {
     font-size: 22px;
     margin-bottom: 25px;
     padding-bottom: 15px;
-    border-bottom: 3px solid #9d8b70;
+    border-bottom: 3px solid #5a5a5a;
     display: flex;
     align-items: center;
     gap: 10px;
@@ -476,7 +477,7 @@ tbody tr:hover {
     display: flex;
     align-items: center;
     gap: 10px;
-    border-left: 4px solid #9d8b70;
+    border-left: 4px solid #5a5a5a;
 }
 
 .slot-row {
@@ -674,7 +675,7 @@ tbody tr:hover {
 }
 
 .section-header h3 i {
-    color: #9d8b70;
+    color: #5a5a5a;
 }
 
 .btn-small {
@@ -697,7 +698,7 @@ tbody tr:hover {
     background: white;
     padding: 15px;
     border-radius: 8px;
-    border-left: 4px solid #9d8b70;
+    border-left: 4px solid #5a5a5a;
 }
 
 .info-item strong {
@@ -715,7 +716,7 @@ tbody tr:hover {
 }
 
 .info-item.total-fee {
-    background: linear-gradient(135deg, #9d8b70 0%, #b5a593 100%);
+    background: linear-gradient(135deg, #5a5a5a 0%, #6e6e6e 100%);
     color: white;
     border: none;
 }
@@ -1090,7 +1091,7 @@ tbody tr:hover {
 
 .ticket-header {
     text-align: center;
-    background: linear-gradient(135deg, #9d8b70 0%, #9d8b70 100%);
+    background: linear-gradient(135deg, #5a5a5a 0%, #5a5a5a 100%);
     color: white;
     padding: 20px;
     border-radius: 15px 15px 0 0;
@@ -1147,7 +1148,7 @@ tbody tr:hover {
 .ticket-num {
     font-size: 42px;
     font-weight: 700;
-    color: #9d8b70;
+    color: #5a5a5a;
     font-family: 'Courier New', monospace;
     letter-spacing: 2px;
 }
@@ -1388,7 +1389,7 @@ tbody tr:hover {
 }
 
 .shortcut-section h3 {
-    color: #9d8b70;
+    color: #5a5a5a;
     font-size: 16px;
     margin-bottom: 15px;
     padding-bottom: 8px;
@@ -1438,7 +1439,7 @@ kbd {
 }
 
 .shortcuts-footer p {
-    color: #9d8b70;
+    color: #5a5a5a;
     font-size: 14px;
     margin: 0;
     display: flex;
@@ -1448,7 +1449,7 @@ kbd {
 }
 
 .shortcuts-footer i {
-    color: #9d8b70;
+    color: #5a5a5a;
 }
 
 /* Responsive */
@@ -1507,13 +1508,13 @@ kbd {
 }
 
 .message.success {
-    background: linear-gradient(135deg, #f5f0e8 0%, #faf7f2 100%);
-    color: #6b5d4f;
-    border: 2px solid #9d8b70;
+    background: linear-gradient(135deg, #e8e8e8 0%, #f2f2f2 100%);
+    color: #3a3a3a;
+    border: 2px solid #6e6e6e;
 }
 
 .message.error {
-    background: linear-gradient(135deg, #f5e8e5 0%, #faf2ef 100%);
-    color: #8b5a4f;
-    border: 2px solid #c9826b;
+    background: linear-gradient(135deg, #d4d4d4 0%, #e0e0e0 100%);
+    color: #2c2c2c;
+    border: 2px solid #8a8a8a;
 }
