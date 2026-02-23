@@ -73,7 +73,7 @@ $(document).ready(function() {
     });
     
     // Enter key on entry form to submit
-    $('#vehicle-number, #owner-name, #owner-phone').keypress(function(e) {
+    $('#vehicle-number').keypress(function(e) {
         if (e.which === 13) { // Enter key
             e.preventDefault();
             const nextInput = $(this).closest('.form-group').next('.form-group').find('input, select');
@@ -381,7 +381,7 @@ $(document).ready(function() {
         const tbody = $('#parked-vehicles-body');
         
         if (!vehicles || vehicles.length === 0) {
-            tbody.html('<tr><td colspan="6" class="no-data">No vehicles currently parked</td></tr>');
+            tbody.html('<tr><td colspan="5" class="no-data">No vehicles currently parked</td></tr>');
             return;
         }
         
@@ -392,7 +392,6 @@ $(document).ready(function() {
                     <td>${vehicle.slot_number}</td>
                     <td><strong>${vehicle.vehicle_number}</strong></td>
                     <td>${vehicle.vehicle_type.replace('_', ' ')}</td>
-                    <td>${vehicle.owner_name}</td>
                     <td>${formatDateTime(vehicle.entry_time)}</td>
                     <td>${vehicle.duration}</td>
                 </tr>
@@ -405,8 +404,6 @@ $(document).ready(function() {
     function displayVehicleInfo(data) {
         $('#info-vehicle-number').text(data.vehicle_number);
         $('#info-vehicle-type').text(data.vehicle_type.replace('_', ' '));
-        $('#info-owner-name').text(data.owner_name);
-        $('#info-owner-phone').text(data.owner_phone);
         $('#info-slot-number').text(data.slot_number);
         $('#info-entry-time').text(formatDateTime(data.entry_time));
         $('#info-duration').text(data.duration);
@@ -483,7 +480,7 @@ $(document).ready(function() {
         const tbody = $('#reports-body');
         
         if (!data.records || data.records.length === 0) {
-            tbody.html('<tr><td colspan="8" class="no-data">No records found for selected date range</td></tr>');
+            tbody.html('<tr><td colspan="7" class="no-data">No records found for selected date range</td></tr>');
             $('#report-total').text('₱0.00');
             return;
         }
@@ -494,7 +491,6 @@ $(document).ready(function() {
                 <tr>
                     <td>${record.vehicle_number}</td>
                     <td>${record.vehicle_type.replace('_', ' ')}</td>
-                    <td>${record.owner_name}</td>
                     <td>${record.slot_number}</td>
                     <td>${formatDateTime(record.entry_time)}</td>
                     <td>${formatDateTime(record.exit_time)}</td>
