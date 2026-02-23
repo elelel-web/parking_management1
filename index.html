@@ -91,14 +91,13 @@
                                 <th>Slot</th>
                                 <th>Vehicle Number</th>
                                 <th>Type</th>
-                                <th>Owner</th>
                                 <th>Entry Time</th>
                                 <th>Duration</th>
                             </tr>
                         </thead>
                         <tbody id="parked-vehicles-body">
                             <tr>
-                                <td colspan="6" class="no-data">No vehicles currently parked</td>
+                                <td colspan="5" class="no-data">No vehicles currently parked</td>
                             </tr>
                         </tbody>
                     </table>
@@ -220,7 +219,7 @@
                     </div>
 
                     <button type="submit" class="btn btn-success btn-park">
-                        <i class="fas fa-parking"></i> Park Vehicle
+                        <i class="fas fa-parking"></i> Park Vehicle & Print Ticket
                     </button>
                 </form>
             </div>
@@ -306,7 +305,6 @@
                         <tr>
                             <th>Vehicle Number</th>
                             <th>Type</th>
-                            <th>Owner</th>
                             <th>Slot</th>
                             <th>Entry Time</th>
                             <th>Exit Time</th>
@@ -316,12 +314,12 @@
                     </thead>
                     <tbody id="reports-body">
                         <tr>
-                            <td colspan="8" class="no-data">Select date range and click Generate Report</td>
+                            <td colspan="7" class="no-data">Select date range and click Generate Report</td>
                         </tr>
                     </tbody>
                     <tfoot>
                         <tr>
-                            <td colspan="7" style="text-align: right;"><strong>Total Revenue:</strong></td>
+                            <td colspan="6" style="text-align: right;"><strong>Total Revenue:</strong></td>
                             <td><strong id="report-total">₱0.00</strong></td>
                         </tr>
                     </tfoot>
@@ -343,7 +341,6 @@
                 </div>
                 <div class="ticket-footer">
                     <p>Please keep this ticket safe</p>
-                    <p>In case of emergency, you will be paged using your <strong>TICKET NUMBER</strong> only</p>
                     <p>Present this ticket when exiting</p>
                 </div>
             </div>
