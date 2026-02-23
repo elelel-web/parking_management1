@@ -314,6 +314,31 @@ $(document).ready(function() {
         });
     });
     
+    // Search Reports by Vehicle Number
+    $('#report-search').on('input', function() {
+        const searchTerm = $(this).val().toUpperCase().trim();
+        const rows = $('#reports-body tr');
+        
+        if (!searchTerm) {
+            rows.show();
+            return;
+        }
+        
+        rows.each(function() {
+            const vehicleNumber = $(this).find('td:first').text().toUpperCase();
+            if (vehicleNumber.includes(searchTerm)) {
+                $(this).show();
+            } else {
+                $(this).hide();
+            }
+        });
+    });
+    
+    // Auto-uppercase report search
+    $('#report-search').on('input', function() {
+        $(this).val($(this).val().toUpperCase());
+    });
+    
     // Refresh Parked Vehicles
     $('#refresh-parked-vehicles').click(function() {
         loadAllParkedVehicles();
