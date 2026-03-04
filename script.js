@@ -215,67 +215,151 @@ $(document).ready(function() {
     });
     
     // Search Vehicle for Exit
-    $('#search-vehicle').click(function() {
-        const vehicleNumber = $('#exit-vehicle-number').val().toUpperCase();
-        
-        if (!vehicleNumber) {
-            showMessage('error', 'Please enter vehicle number');
-            return;
-        }
-        
-        $.ajax({
-            url: 'api/search_vehicle.php',
-            method: 'POST',
-            data: JSON.stringify({ vehicle_number: vehicleNumber }),
-            contentType: 'application/json',
-            success: function(response) {
-                if (response.success) {
-                    displayVehicleInfo(response.data);
-                } else {
-                    showMessage('error', response.message);
-                    $('#vehicle-info').hide();
-                }
-            },
-            error: function() {
-                showMessage('error', 'An error occurred. Please try again.');
-            }
-        });
-    });
+$('#search-vehicle').click(function() {
+    const vehicleNumber = $('#exit-vehicle-number').val().trim().toUpperCase();
     
-    // Process Exit
-    $('#process-exit').click(function() {
-        const vehicleNumber = $('#exit-vehicle-number').val().toUpperCase();
-        
-        if (confirm('Are you sure you want to process the exit for this vehicle?')) {
-            $.ajax({
-                url: 'api/exit.php',
-                method: 'POST',
-                data: JSON.stringify({ vehicle_number: vehicleNumber }),
-                contentType: 'application/json',
-                success: function(response) {
-                    if (response.success) {
-                        showReceipt(response.data);
-                        $('#exit-form')[0].reset();
-                        $('#vehicle-info').hide();
-                        showMessage('success', 'Vehicle exit processed successfully!');
-                        
-                        // Refresh the parked vehicles table
-                        loadAllParkedVehicles();
-                        
-                        // Also refresh dashboard if on that tab
-                        if ($('.tab-btn[data-tab="dashboard"]').hasClass('active')) {
-                            loadDashboard();
-                        }
-                    } else {
-                        showMessage('error', response.message);
-                    }
-                },
-                error: function() {
-                    showMessage('error', 'An error occurred. Please try again.');
-                }
-            });
+    if (!vehicleNumber) {
+        showMessage('error', 'Please enter vehicle number');
+        return;
+    }
+    
+    console.log('Searching for:', vehicleNumber); // Debug
+    
+    $.ajax({
+        url: 'api/search_vehicle.php',
+        method: 'POST',
+        data: JSON.stringify({ vehicle_number: vehicleNumber }),
+        contentType: 'application/json',
+        success: function(response) {
+            console.log('Search response:', response); // Debug
+            
+            if (response.success) {
+                // ⭐ CRITICAL: Store the ID before displaying
+                $('#vehicle-info').data('record-id', response.data.id);
+                console.log('Stored record ID:', response.data.id); // Debug
+                
+                displayVehicleInfo(response.data);
+            } else {
+                showMessage('error', response.message);
+                $('#vehicle-info').hide();
+            }
+        },
+        error: function(xhr) {
+            console.error('Search error:', xhr.responseText);
+            showMessage('error', 'An error occurred. Please try again.');
         }
     });
+});
+
+// Display Vehicle Info
+function displayVehicleInfo(data) {
+    console.log('Displaying vehicle data:', data); // Debug
+    
+    let html = `
+        <div class="vehicle-info-content">
+            <div class="info-row">
+                <span class="info-label">Vehicle Number:</span>
+                <span class="info-value">${data.vehicle_number}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Type:</span>
+                <span class="info-value">${data.vehicle_type.replace('_', ' ')}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Slot Number:</span>
+                <span class="info-value">${data.slot_number}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Entry Time:</span>
+                <span class="info-value">${new Date(data.entry_time).toLocaleString()}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Duration:</span>
+                <span class="info-value">${data.duration}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Parking Fee:</span>
+                <span class="info-value fee-highlight">₱${parseFloat(data.parking_fee).toFixed(2)}</span>
+            </div>
+        </div>
+    `;
+    
+    $('#vehicle-details').html(html);
+    $('#vehicle-info').show();
+    $('#no-vehicle-message').hide();
+}
+
+// Process Exit
+$('#process-exit').click(function() {
+    // Get the stored record ID
+    const recordId = $('#vehicle-info').data('record-id');
+    
+    console.log('Exit button clicked'); // Debug
+    console.log('Record ID:', recordId); // Debug
+    
+    if (!recordId) {
+        console.error('No record ID found!'); // Debug
+        showMessage('error', 'No vehicle record found. Please search for a vehicle first.');
+        return;
+    }
+    
+    if (!confirm('Are you sure you want to process exit for this vehicle?')) {
+        return;
+    }
+    
+    // Show loading
+    $(this).prop('disabled', true).text('Processing...');
+    
+    console.log('Sending exit request with record_id:', recordId); // Debug
+    
+    $.ajax({
+        url: 'api/exit.php',
+        method: 'POST',
+        data: JSON.stringify({
+            record_id: recordId
+        }),
+        contentType: 'application/json',
+        success: function(response) {
+            console.log('Exit response:', response); // Debug
+            
+            if (response.success) {
+                showMessage('success', 'Vehicle exit processed successfully!');
+                
+                // Show receipt
+                alert('Exit Successful!\n\nVehicle: ' + response.data.vehicle_number + 
+                      '\nFinal Fee: ₱' + response.data.parking_fee +
+                      '\nDuration: ' + response.data.duration);
+                
+                // Clear search
+                $('#exit-vehicle-number').val('');
+                $('#vehicle-info').hide();
+                $('#no-vehicle-message').show();
+                
+                // Reload dashboard
+                if (typeof loadDashboard === 'function') {
+                    loadDashboard();
+                }
+            } else {
+                showMessage('error', response.message || 'Failed to process exit');
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error('Exit error:', xhr.responseText);
+            showMessage('error', 'An error occurred: ' + error);
+        },
+        complete: function() {
+            $('#process-exit').prop('disabled', false).text('Process Exit & Print Receipt');
+        }
+    });
+});
+
+
+
+
+
+
+
+
     
     // Add Slot Modal
     // REMOVED - Add slot functionality disabled
@@ -711,3 +795,34 @@ $(document).ready(function() {
     $('#report-date-from').val(today);
     $('#report-date-to').val(today);
 });
+
+    $('#logout-btn').click(function() {
+    if (confirm('Are you sure you want to logout?')) {
+        $.ajax({
+            url: 'api/auth/logout.php',
+            method: 'POST',
+            success: function() {
+                window.location.href = 'login.php';
+            }
+        });
+    }
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
