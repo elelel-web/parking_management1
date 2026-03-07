@@ -2,7 +2,7 @@
 session_start();
 // If already logged in, redirect to main page
 if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true) {
-    header('Location: index.php');
+    header('Location: index.html');
     exit;
 }
 ?>
@@ -337,7 +337,7 @@ if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true) {
                         if (response.success) {
                             showSuccess('Login successful! Redirecting...');
                             setTimeout(function() {
-                                window.location.href = 'index.php';
+                                window.location.href = 'index.html';
                             }, 500);
                         } else {
                             showError(response.message || 'Invalid username or password');
