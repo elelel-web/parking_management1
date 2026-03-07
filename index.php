@@ -1,3 +1,5 @@
+<?php require_once 'auth_check.php'; ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -9,6 +11,9 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
+
+
+
     <div class="container">
         <!-- Header -->
         <header class="header">
@@ -24,10 +29,7 @@
             <nav class="nav-tabs">
                 <button class="tab-btn active" data-tab="dashboard">
                     <i class="fas fa-dashboard"></i> Dashboard
-                </button>
-                <button class="tab-btn" data-tab="entry">
-                    <i class="fas fa-sign-in-alt"></i> Vehicle Entry
-                </button>
+             
                 <button class="tab-btn" data-tab="manage-vehicles">
                     <i class="fas fa-car"></i> Manage Vehicles
                 </button>
@@ -37,8 +39,23 @@
                 <button class="tab-btn" data-tab="reports">
                     <i class="fas fa-chart-bar"></i> Reports
                 </button>
+
+                <div class="nav-user-section">
+                <div class="user-info">
+                    <i class="fas fa-user-circle"></i>
+                    <span><?php echo htmlspecialchars($current_full_name); ?></span>
+                </div>
+                <button class="btn-logout" id="logout-btn">
+                    <i class="fas fa-sign-out-alt"></i>
+                    Logout
+                </button>
+            </div>
             </nav>
         </header>
+
+
+        
+
 
         <!-- Dashboard Tab -->
         <div id="dashboard" class="tab-content active">
@@ -107,11 +124,23 @@
 
         <!-- Manage Vehicles Tab -->
         <div id="manage-vehicles" class="tab-content">
-            <h2>Manage Vehicles</h2>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h2 style="margin: 0;">Manage Vehicles</h2>
+        
+        <!-- ⭐ ADD BUTTON HERE - aligned right -->
+        <button class="entry_button" id="open-entry-modal" data-tab="entry">
+            <i class="fas fa-sign-in-alt"></i> Vehicle Entry
+        </button>
+    </div>
+
             
+
+           
             <!-- Search and Exit Section -->
             <div class="manage-vehicle-section">
                 <div class="section-header">
+                       </button>
+                
                     <h3><i class="fas fa-search"></i> Search & Exit Vehicle</h3>
                 </div>
                 
@@ -192,38 +221,42 @@
             </div>
         </div>
 
-        <!-- Vehicle Entry Tab -->
-        <div id="entry" class="tab-content">
-            <h2>Vehicle Entry</h2>
-            <div class="form-container">
-                <form id="entry-form">
-                    <div class="form-group">
-                        <label for="vehicle-number">Vehicle Number *</label>
-                        <input type="text" id="vehicle-number" name="vehicle_number" placeholder="e.g., ABC-1234" required>
-                    </div>
+        <!-- Vehicle Entry Modal -->
+            <div id="entry-modal" class="modal">
+                <div class="modal-content">
+                    <span class="close" id="close-entry-modal">&times;</span>
+                    <h2><i class="fas fa-sign-in-alt"></i> Vehicle Entry</h2>
 
-                    <div class="form-group">
-                        <label for="vehicle-type">Vehicle Type *</label>
-                        <select id="vehicle-type" name="vehicle_type" required>
-                            <option value="">Select Type</option>
-                            <option value="two_wheeler">Two Wheeler</option>
-                            <option value="four_wheeler">Four Wheeler</option>
-                        </select>
-                    </div>
+                    <div class="form-container">
+                        <form id="entry-form">
+                            <div class="form-group">
+                                <label for="vehicle-number">Vehicle Number *</label>
+                                <input type="text" id="vehicle-number" name="vehicle_number" placeholder="e.g., ABC-1234" required>
+                            </div>
 
-                    <div class="form-group">
-                        <label for="slot-select">Available Parking Slot *</label>
-                        <select id="slot-select" name="slot_id" required>
-                            <option value="">Select vehicle type first</option>
-                        </select>
-                    </div>
+                            <div class="form-group">
+                                <label for="vehicle-type">Vehicle Type *</label>
+                                <select id="vehicle-type" name="vehicle_type" required>
+                                    <option value="">Select Type</option>
+                                    <option value="two_wheeler">Two Wheeler</option>
+                                    <option value="four_wheeler">Four Wheeler</option>
+                                </select>
+                            </div>
 
-                    <button type="submit" class="btn btn-success btn-park">
-                        <i class="fas fa-parking"></i> Park Vehicle
-                    </button>
-                </form>
+                            <div class="form-group">
+                                <label for="slot-select">Available Parking Slot *</label>
+                                <select id="slot-select" name="slot_id" required>
+                                    <option value="">Select vehicle type first</option>
+                                </select>
+                            </div>
+
+                            <button type="submit" class="btn btn-success btn-park">
+                                <i class="fas fa-parking"></i> Park Vehicle
+                            </button>
+                        </form>
+                    </div>
+                </div>
             </div>
-        </div>
 
         <!-- Manage Slots Tab -->
         <div id="slots" class="tab-content">
@@ -237,10 +270,6 @@
                 <div class="legend-item">
                     <div class="legend-box occupied"></div>
                     <span>Occupied</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-box handicapped"></div>
-                    <span>Handicapped</span>
                 </div>
             </div>
 
@@ -267,75 +296,128 @@
                                 <!-- Four wheeler slots will be loaded here -->
                             </div>
                         </div>
-
-                        <div class="parking-zone special">
-                            <div class="zone-header">
-                                <i class="fas fa-wheelchair"></i> Priority Parking (Handicapped)
-                            </div>
-                            <div class="slot-row" id="zone-h-slots">
-                                <!-- Handicapped slots will be loaded here -->
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- Reports Tab -->
-        <div id="reports" class="tab-content">
-            <h2>Parking Reports</h2>
+        <!-- ==================== REPORTS TAB - UPDATED WITH FILTER ==================== -->
+<!-- Replace your existing Reports tab section with this -->
+
+<div id="reports" class="tab-content">
+    <h2>Parking Reports</h2>
+    
+    <!-- Filter and Date Range Container -->
+    <div class="report-filters">
+        <!-- NEW: Report Type Filter -->
+        <div class="form-group">
+            <label for="report-filter-type">
+                <i class="fas fa-filter"></i> Report Type
+            </label>
+            <select id="report-filter-type" class="form-control">
+                <option value="date_range">Date Range (Custom)</option>
+                <option value="day">Single Day</option>
+                <option value="month">Month</option>
+                <option value="year">Year</option>
+            </select>
+        </div>
+
+        <!-- Date Range Inputs (shown for date_range filter) -->
+        <div id="date-range-inputs">
+            <div class="form-group">
+                <label for="report-date-from">From Date:</label>
+                <input type="date" id="report-date-from" class="form-control">
+            </div>
             
-            <div class="report-filters">
-                <div class="form-group">
-                    <label for="report-date-from">From Date</label>
-                    <input type="date" id="report-date-from">
-                </div>
-                <div class="form-group">
-                    <label for="report-date-to">To Date</label>
-                    <input type="date" id="report-date-to">
-                </div>
-                <button class="btn btn-primary" id="generate-report">
-                    <i class="fas fa-file-pdf"></i> Generate Report
-                </button>
-            </div>
-
-            <div class="search-section" style="margin: 20px 0;">
-                <div class="form-group" style="max-width: 400px;">
-                    <label style="display: flex; align-items: center; gap: 8px; color: #5a5a5a;">
-                     <i class="fas fa-search" style="color: #1e243a;"></i> Search by Vehicle Number
-                    </label>
-                    <input type="text" id="report-search" placeholder="Enter vehicle number">
-                </div>
-            </div>
-
-            <div class="table-container">
-                <table id="reports-table">
-                    <thead>
-                        <tr>
-                            <th>Vehicle Number</th>
-                            <th>Type</th>
-                            <th>Slot</th>
-                            <th>Entry Time</th>
-                            <th>Exit Time</th>
-                            <th>Duration</th>
-                            <th>Fee</th>
-                        </tr>
-                    </thead>
-                    <tbody id="reports-body">
-                        <tr>
-                            <td colspan="7" class="no-data">Select date range and click Generate Report</td>
-                        </tr>
-                    </tbody>
-                    <tfoot>
-                        <tr>
-                            <td colspan="6" style="text-align: right;"><strong>Total Revenue:</strong></td>
-                            <td><strong id="report-total">₱0.00</strong></td>
-                        </tr>
-                    </tfoot>
-                </table>
+            <div class="form-group">
+                <label for="report-date-to">To Date:</label>
+                <input type="date" id="report-date-to" class="form-control">
             </div>
         </div>
+
+        <!-- Single Day Input (hidden by default) -->
+        <div id="day-input" style="display: none;">
+            <div class="form-group">
+                <label for="report-single-day">Select Day:</label>
+                <input type="date" id="report-single-day" class="form-control">
+            </div>
+        </div>
+
+        <!-- Month Input (hidden by default) -->
+        <div id="month-input" style="display: none;">
+            <div class="form-group">
+                <label for="report-month">Select Month:</label>
+                <input type="month" id="report-month" class="form-control">
+            </div>
+        </div>
+
+        <!-- Year Input (hidden by default) -->
+        <div id="year-input" style="display: none;">
+            <div class="form-group">
+                <label for="report-year">Select Year:</label>
+                <select id="report-year" class="form-control">
+                    <option value="2024">2024</option>
+                    <option value="2025">2025</option>
+                    <option value="2026" selected>2026</option>
+                    <option value="2027">2027</option>
+                    <option value="2028">2028</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>&nbsp;</label>
+            <button id="generate-report" class="btn btn-primary">
+                <i class="fas fa-chart-bar"></i> Generate Report
+            </button>
+        </div>
     </div>
+
+    <!-- Search Box -->
+    <div class="form-group" style="max-width: 400px; margin: 20px 0;">
+        <label for="search-vehicle-report">
+            <i class="fas fa-search"></i> Search by Vehicle Number
+        </label>
+        <input type="text" 
+               id="search-vehicle-report" 
+               class="form-control" 
+               placeholder="Enter vehicle number"
+               oninput="filterReportTable(this.value)">
+    </div>
+
+    <!-- Report Table -->
+    <div class="table-container">
+        <table id="reports-table">
+            <thead>
+                <tr>
+                    <th>VEHICLE NUMBER</th>
+                    <th>TYPE</th>
+                    <th>SLOT</th>
+                    <th>ENTRY TIME</th>
+                    <th>EXIT TIME</th>
+                    <th>DURATION</th>
+                    <th>FEE</th>
+                </tr>
+            </thead>
+            <tbody id="reports-body">
+                <tr>
+                    <td colspan="7" class="no-data">Select date range and click Generate Report</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+   
+    <div id="pagination-container" style="margin-top: 20px;"></div>
+
+   
+    <div style="text-align: right; margin-top: 20px; font-size: 18px; font-weight: bold;">
+        <span>Total Revenue:</span>
+        <span id="report-total" style="color: #27ae60; margin-left: 10px;">₱0.00</span>
+    </div>
+</div>
+
 
     <!-- Parking Ticket Modal -->
     <div id="ticket-modal" class="modal">
@@ -358,7 +440,7 @@
                     <i class="fas fa-print"></i> Print Ticket
                 </button>
                 <button class="btn btn-secondary close">
-                    <i class="fas fa-times"></i> Close
+                    <i class="fas fa-times"></i> 
                 </button>
             </div>
         </div>
@@ -386,7 +468,7 @@
                     <i class="fas fa-print"></i> Print Receipt
                 </button>
                 <button class="btn btn-secondary close">
-                    <i class="fas fa-times"></i> Close
+                    <i class="fas fa-times"></i> 
                 </button>
             </div>
         </div>
@@ -467,5 +549,118 @@
     </div>
 
     <script src="script.js"></script>
+
+    <!-- EDIT VEHICLE MODAL -->
+<div class="modal-overlay" id="edit-vehicle-modal" style="display: none;">
+    <div class="modal-content modal-medium">
+        <div class="modal-header">
+            <h3><i class="fas fa-edit"></i> Edit Vehicle Information</h3>
+            <button class="modal-close" onclick="closeEditModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <div class="modal-body">
+            <input type="hidden" id="edit-record-id">
+            
+            <div class="form-group">
+                <label>Vehicle Number:</label>
+                <input type="text" id="edit-vehicle-number" class="form-control" readonly>
+            </div>
+            
+            <div class="form-group">
+                <label>Current Slot:</label>
+                <input type="text" id="edit-current-slot" class="form-control" readonly>
+            </div>
+            
+            <div class="form-group">
+                <label>Entry Time:</label>
+                <input type="text" id="edit-entry-time" class="form-control" readonly>
+            </div>
+            
+            <div class="form-group">
+                <label>Vehicle Type:</label>
+                <select id="edit-vehicle-type" class="form-control">
+                    <option value="two_wheeler">Two Wheeler</option>
+                    <option value="four_wheeler">Four Wheeler</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>Move to New Slot (Optional):</label>
+                <select id="edit-new-slot" class="form-control">
+                    <option value="">Keep current slot</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeEditModal()">
+                <i class="fas fa-times"></i> Cancel
+            </button>
+            <button class="btn btn-primary" onclick="saveVehicleEdit()">
+                <i class="fas fa-save"></i> Save Changes
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- EXIT VEHICLE MODAL -->
+<div class="modal-overlay" id="exit-vehicle-modal" style="display: none;">
+    <div class="modal-content modal-medium">
+        <div class="modal-header" style="background: #dc3545;">
+            <h3 style="color: white;"><i class="fas fa-sign-out-alt"></i> Exit Vehicle</h3>
+            <button class="modal-close" onclick="closeExitModal()" style="color: white;">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <div class="modal-body">
+            <input type="hidden" id="exit-record-id">
+            
+            <div class="exit-info-card">
+                <div class="info-row">
+                    <span class="label">Vehicle Number:</span>
+                    <span class="value" id="exit-vehicle-number"></span>
+                </div>
+                <div class="info-row">
+                    <span class="label">Vehicle Type:</span>
+                    <span class="value" id="exit-vehicle-type"></span>
+                </div>
+                <div class="info-row">
+                    <span class="label">Slot Number:</span>
+                    <span class="value" id="exit-slot-number"></span>
+                </div>
+                <div class="info-row">
+                    <span class="label">Entry Time:</span>
+                    <span class="value" id="exit-entry-time"></span>
+                </div>
+                <div class="info-row">
+                    <span class="label">Duration:</span>
+                    <span class="value" id="exit-duration" style="color: #ff9800; font-weight: bold;"></span>
+                </div>
+                <div class="info-row fee-row">
+                    <span class="label">Parking Fee:</span>
+                    <span class="value fee-amount" id="exit-fee"></span>
+                </div>
+            </div>
+            
+            <div class="exit-warning">
+                <i class="fas fa-exclamation-triangle"></i>
+                <p>Are you sure you want to process exit for this vehicle?</p>
+            </div>
+        </div>
+        
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeExitModal()">
+                <i class="fas fa-times"></i> Cancel
+            </button>
+            <button class="btn btn-danger" onclick="confirmVehicleExit()">
+                <i class="fas fa-sign-out-alt"></i> Process Exit & Print Receipt
+            </button>
+        </div>
+    </div>
+</div>
+
 </body>
 </html>

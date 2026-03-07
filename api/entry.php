@@ -1,118 +1,95 @@
 <?php
+session_start();
 header('Content-Type: application/json');
 require_once '../config.php';
 
+if (!isset($_SESSION['user_id'])) {
+    echo json_encode(['success' => false, 'message' => 'Unauthorized']);
+    exit;
+}
+
+$user_id = $_SESSION['user_id'];
 $data = json_decode(file_get_contents('php://input'), true);
 
-if (!$data) {
-    echo json_encode(['success' => false, 'message' => 'Invalid request data']);
+if (!$data || empty($data['vehicle_number']) || empty($data['vehicle_type']) || empty($data['slot_id'])) {
+    echo json_encode(['success' => false, 'message' => 'All fields are required']);
     exit;
 }
 
 $vehicle_number = strtoupper(trim($data['vehicle_number']));
 $vehicle_type = $data['vehicle_type'];
-$slot_id = intval($data['slot_id']);
+$slot_id = $data['slot_id'];
 
-// Validate inputs
-if (empty($vehicle_number) || empty($vehicle_type) || empty($slot_id)) {
-    echo json_encode(['success' => false, 'message' => 'All fields are required']);
-    exit;
-}
+$conn->begin_transaction();
 
 try {
-    $conn->begin_transaction();
-    
-    // Check if vehicle is already parked
-    $check_query = "SELECT pr.id FROM parking_records pr 
-                    JOIN vehicles v ON pr.vehicle_id = v.id 
-                    WHERE v.vehicle_number = ? AND pr.status = 'parked'";
-    $stmt = $conn->prepare($check_query);
+    // Check if vehicle already parked
+    $stmt = $conn->prepare("SELECT id FROM parking_records WHERE vehicle_id IN (SELECT id FROM vehicles WHERE vehicle_number = ?) AND status = 'parked' LIMIT 1");
     $stmt->bind_param('s', $vehicle_number);
     $stmt->execute();
-    $result = $stmt->get_result();
-    
-    if ($result->num_rows > 0) {
+    if ($stmt->get_result()->num_rows > 0) {
         echo json_encode(['success' => false, 'message' => 'Vehicle is already parked']);
+        $conn->rollback();
         exit;
     }
-    
-    // Check if slot is available
-    $slot_query = "SELECT slot_number FROM parking_slots WHERE id = ? AND status = 'available'";
-    $stmt = $conn->prepare($slot_query);
+
+    // Check slot available
+    $stmt = $conn->prepare("SELECT status FROM parking_slots WHERE id = ? AND status = 'available'");
     $stmt->bind_param('i', $slot_id);
     $stmt->execute();
-    $result = $stmt->get_result();
-    
-    if ($result->num_rows === 0) {
-        echo json_encode(['success' => false, 'message' => 'Selected slot is not available']);
+    if ($stmt->get_result()->num_rows === 0) {
+        echo json_encode(['success' => false, 'message' => 'Slot not available']);
+        $conn->rollback();
         exit;
     }
-    
-    $slot_data = $result->fetch_assoc();
-    $slot_number = $slot_data['slot_number'];
-    
-    // Use slot number as ticket number (e.g., A-001 becomes A001)
-    $ticket_number = str_replace('-', '', $slot_number);
-    
-    // Insert or update vehicle
-    $vehicle_id = null;
-    $check_vehicle = "SELECT id FROM vehicles WHERE vehicle_number = ?";
-    $stmt = $conn->prepare($check_vehicle);
+
+    // Get or create vehicle
+    $stmt = $conn->prepare("SELECT id FROM vehicles WHERE vehicle_number = ?");
     $stmt->bind_param('s', $vehicle_number);
     $stmt->execute();
     $result = $stmt->get_result();
-    
+
     if ($result->num_rows > 0) {
         $vehicle_id = $result->fetch_assoc()['id'];
-        // Update vehicle type
-        $update_query = "UPDATE vehicles SET vehicle_type = ? WHERE id = ?";
-        $stmt = $conn->prepare($update_query);
+        $stmt = $conn->prepare("UPDATE vehicles SET vehicle_type = ?, updated_at = NOW() WHERE id = ?");
         $stmt->bind_param('si', $vehicle_type, $vehicle_id);
         $stmt->execute();
     } else {
-        // Insert new vehicle
-        $insert_query = "INSERT INTO vehicles (vehicle_number, vehicle_type) 
-                        VALUES (?, ?)";
-        $stmt = $conn->prepare($insert_query);
+        $stmt = $conn->prepare("INSERT INTO vehicles (vehicle_number, vehicle_type) VALUES (?, ?)");
         $stmt->bind_param('ss', $vehicle_number, $vehicle_type);
         $stmt->execute();
         $vehicle_id = $conn->insert_id;
     }
-    
-    // Create parking record
-    $entry_time = date('Y-m-d H:i:s');
-    $record_query = "INSERT INTO parking_records (vehicle_id, slot_id, entry_time, status) 
-                    VALUES (?, ?, ?, 'parked')";
-    $stmt = $conn->prepare($record_query);
-    $stmt->bind_param('iis', $vehicle_id, $slot_id, $entry_time);
+
+    // Insert parking record
+    $stmt = $conn->prepare("INSERT INTO parking_records (user_id, vehicle_id, slot_id, entry_time, status) VALUES (?, ?, ?, NOW(), 'parked')");
+    $stmt->bind_param('iii', $user_id, $vehicle_id, $slot_id);
     $stmt->execute();
-    
-    // Update slot status
-    $update_slot = "UPDATE parking_slots SET status = 'occupied' WHERE id = ?";
-    $stmt = $conn->prepare($update_slot);
+    $record_id = $conn->insert_id;
+
+    // Update slot
+    $stmt = $conn->prepare("UPDATE parking_slots SET status = 'occupied' WHERE id = ?");
     $stmt->bind_param('i', $slot_id);
     $stmt->execute();
-    
+
+    // Get ticket info
+    $stmt = $conn->prepare("SELECT pr.id, pr.entry_time, v.vehicle_number, v.vehicle_type, ps.slot_number, u.full_name as processed_by
+                           FROM parking_records pr
+                           JOIN vehicles v ON pr.vehicle_id = v.id
+                           JOIN parking_slots ps ON pr.slot_id = ps.id
+                           JOIN users u ON pr.user_id = u.id
+                           WHERE pr.id = ?");
+    $stmt->bind_param('i', $record_id);
+    $stmt->execute();
+    $ticket = $stmt->get_result()->fetch_assoc();
+    $ticket['ticket_number'] = str_replace('-', '', $ticket['slot_number']);
+
     $conn->commit();
-    
-    echo json_encode([
-        'success' => true,
-        'message' => 'Vehicle parked successfully',
-        'ticket' => [
-            'ticket_number' => $ticket_number,
-            'vehicle_number' => $vehicle_number,
-            'vehicle_type' => $vehicle_type,
-            'slot_number' => $slot_number,
-            'entry_time' => $entry_time
-        ]
-    ]);
-    
+    echo json_encode(['success' => true, 'message' => 'Vehicle parked successfully', 'ticket' => $ticket]);
+
 } catch (Exception $e) {
     $conn->rollback();
-    echo json_encode([
-        'success' => false,
-        'message' => 'Error: ' . $e->getMessage()
-    ]);
+    echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
 }
 
 $conn->close();

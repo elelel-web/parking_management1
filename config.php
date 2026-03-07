@@ -1,12 +1,12 @@
 <?php
-// Database Configuration for XAMPP
-define('DB_HOST', 'localhost');
-define('DB_USER', 'root');
-define('DB_PASS', ''); // Default XAMPP password is empty
-define('DB_NAME', 'parking_management');
+// Database configuration
+$host = 'localhost';
+$db = 'parking_management';
+$user = 'root';
+$pass = '';
 
 // Create connection
-$conn = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
+$conn = new mysqli($host, $user, $pass, $db);
 
 // Check connection
 if ($conn->connect_error) {
@@ -17,8 +17,5 @@ if ($conn->connect_error) {
 }
 
 // Set charset to utf8mb4
-$conn->set_charset("utf8mb4");
-
-// Timezone
-date_default_timezone_set('Asia/Manila');
+$conn->set_charset('utf8mb4');
 ?>
