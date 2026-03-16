@@ -804,3 +804,249 @@ function filterReportTable(searchValue) {
         }
     });
 }
+
+
+// ==================== MISSING RECEIPT MODAL WITH INPUT FORM ====================
+// Add this to your script.js
+
+$(document).ready(function() {
+    
+    // ==================== OPEN MISSING RECEIPT MODAL ====================
+    $('#open-missing-receipt-modal, button:contains("Missing Receipt")').click(function() {
+        $('#missing-receipt-modal').fadeIn();
+        loadMissingReceipts();
+    });
+    
+    // ==================== AUTO-CALCULATE FEE ====================
+    $('#calculate-fee-btn').click(function() {
+        const vehicleType = $('#missing-vehicle-type').val();
+        const entryTime = $('#missing-entry-time').val();
+        const exitTime = $('#missing-exit-time').val();
+        
+        if (!vehicleType || !entryTime || !exitTime) {
+            alert('Please select vehicle type and enter entry/exit times first');
+            return;
+        }
+        
+        // Calculate duration
+        const entry = new Date(entryTime);
+        const exit = new Date(exitTime);
+        const minutes = Math.floor((exit - entry) / 60000);
+        const hours = Math.ceil(minutes / 60);
+        
+        if (hours <= 0) {
+            alert('Exit time must be after entry time');
+            return;
+        }
+        
+        // Calculate fee based on vehicle type
+        let fee = 0;
+        if (vehicleType === 'two_wheeler') {
+            fee = 10; // First hour
+            if (hours > 1) {
+                fee += (hours - 1) * 5; // Additional hours
+            }
+        } else if (vehicleType === 'four_wheeler') {
+            fee = 20; // First hour
+            if (hours > 1) {
+                fee += (hours - 1) * 10; // Additional hours
+            }
+        }
+        
+        $('#missing-fee').val(fee.toFixed(2));
+        showMessage('success', `Fee calculated: ₱${fee.toFixed(2)} for ${hours} hour(s)`);
+    });
+    
+    // ==================== CREATE MISSING RECEIPT RECORD ====================
+    $('#create-missing-receipt-form').submit(function(e) {
+        e.preventDefault();
+        
+        // Get form data
+        const formData = {
+            vehicle_number: $('#missing-vehicle-number').val().trim().toUpperCase(),
+            vehicle_type: $('#missing-vehicle-type').val(),
+            slot_number: $('#missing-slot').val().trim().toUpperCase(),
+            entry_time: $('#missing-entry-time').val(),
+            exit_time: $('#missing-exit-time').val(),
+            parking_fee: parseFloat($('#missing-fee').val()),
+            notes: $('#missing-notes').val().trim() || 'MISSING RECEIPT - MANUAL ENTRY'
+        };
+        
+        // Validate
+        if (!formData.vehicle_number || !formData.vehicle_type || !formData.slot_number) {
+            alert('Please fill in all required fields');
+            return;
+        }
+        
+        // Show loading
+        const submitBtn = $(this).find('button[type="submit"]');
+        const originalText = submitBtn.html();
+        submitBtn.html('<i class="fas fa-spinner fa-spin"></i> Creating...').prop('disabled', true);
+        
+        // Send to API
+        $.ajax({
+            url: 'api/create_missing_receipt.php',
+            method: 'POST',
+            data: JSON.stringify(formData),
+            contentType: 'application/json',
+            success: function(response) {
+                if (response.success) {
+                    showMessage('success', 'Missing receipt record created successfully!');
+                    
+                    // Clear form
+                    $('#create-missing-receipt-form')[0].reset();
+                    
+                    // Reload table
+                    loadMissingReceipts();
+                } else {
+                    alert('Error: ' + response.message);
+                }
+            },
+            error: function() {
+                alert('Failed to create record. Please try again.');
+            },
+            complete: function() {
+                submitBtn.html(originalText).prop('disabled', false);
+            }
+        });
+    });
+    
+});
+
+// ==================== CLOSE MODALS ====================
+function closeMissingReceiptModal() {
+    $('#missing-receipt-modal').fadeOut();
+}
+
+function closeViewReceiptModal() {
+    $('#view-receipt-modal').fadeOut();
+}
+
+// ==================== LOAD MISSING RECEIPTS TABLE ====================
+function loadMissingReceipts() {
+    $('#missing-receipts-body').html('<tr><td colspan="9" class="no-data"><i class="fas fa-spinner fa-spin"></i> Loading...</td></tr>');
+    
+    $.ajax({
+        url: 'api/get_missing_receipts.php',
+        method: 'GET',
+        success: function(response) {
+            if (response.success && response.data.length > 0) {
+                displayMissingReceiptsTable(response.data);
+                updateMissingSummary(response.summary);
+            } else {
+                $('#missing-receipts-body').html('<tr><td colspan="9" class="no-data">No missing receipt records yet. Create one using the form above.</td></tr>');
+                updateMissingSummary({ count: 0, total: 0 });
+            }
+        },
+        error: function() {
+            $('#missing-receipts-body').html('<tr><td colspan="9" class="no-data" style="color: #e74c3c;">Failed to load. Please try again.</td></tr>');
+        }
+    });
+}
+
+// ==================== DISPLAY TABLE ====================
+function displayMissingReceiptsTable(records) {
+    const tbody = $('#missing-receipts-body');
+    tbody.empty();
+    
+    records.forEach(record => {
+        const entryTime = new Date(record.entry_time).toLocaleString();
+        const exitTime = new Date(record.exit_time).toLocaleString();
+        const fee = parseFloat(record.parking_fee).toFixed(2);
+        
+        const row = `
+            <tr>
+                <td style="font-weight: bold; color: #3498db;">#${String(record.id).padStart(6, '0')}</td>
+                <td style="font-weight: bold;">${record.vehicle_number}</td>
+                <td>${record.vehicle_type.replace('_', ' ').toUpperCase()}</td>
+                <td><span style="background: #3498db; color: white; padding: 3px 8px; border-radius: 4px; font-size: 12px;">${record.slot_number}</span></td>
+                <td style="font-size: 12px;">${entryTime}</td>
+                <td style="font-size: 12px;">${exitTime}</td>
+                <td>${record.duration}</td>
+                <td style="font-weight: bold; color: #27ae60;">₱${fee}</td>
+                <td>
+                    <button class="btn btn-sm btn-primary" onclick='viewReceipt(${JSON.stringify(record).replace(/'/g, "&apos;")})'>
+                        <i class="fas fa-eye"></i> View
+                    </button>
+                </td>
+            </tr>
+        `;
+        tbody.append(row);
+    });
+}
+
+// ==================== UPDATE SUMMARY ====================
+function updateMissingSummary(summary) {
+    $('#missing-receipts-count').text(summary.count || 0);
+    $('#missing-receipts-total').text('₱' + parseFloat(summary.total || 0).toFixed(2));
+}
+
+// ==================== VIEW RECEIPT ====================
+function viewReceipt(record) {
+    const entryTime = new Date(record.entry_time).toLocaleString();
+    const exitTime = new Date(record.exit_time).toLocaleString();
+    const createdTime = new Date().toLocaleString();
+    
+    const receiptHTML = `
+        <div style="font-family: 'Courier New', monospace; padding: 20px; border: 2px solid #ddd; border-radius: 8px;">
+            <div style="text-align: center; border-bottom: 2px dashed #000; padding-bottom: 15px; margin-bottom: 15px;">
+                <h2 style="margin: 0; font-size: 20px;">PARKING RECEIPT</h2>
+                <div style="background: #ffc107; color: #856404; padding: 5px; margin: 10px 0; font-weight: bold;">
+                    MISSING RECEIPT - REPLACEMENT
+                </div>
+            </div>
+            
+            <div style="text-align: center; margin-bottom: 15px;">
+                Receipt #<span style="font-weight: bold; font-size: 18px;">${String(record.id).padStart(6, '0')}</span>
+            </div>
+            
+            <table style="width: 100%; font-size: 13px; margin-bottom: 15px;">
+                <tr>
+                    <td style="padding: 5px 0; font-weight: 600;">Vehicle:</td>
+                    <td style="text-align: right; font-weight: bold;">${record.vehicle_number}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 5px 0; font-weight: 600;">Type:</td>
+                    <td style="text-align: right;">${record.vehicle_type.replace('_', ' ').toUpperCase()}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 5px 0; font-weight: 600;">Slot:</td>
+                    <td style="text-align: right;">${record.slot_number}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 5px 0; font-weight: 600;">Entry:</td>
+                    <td style="text-align: right; font-size: 11px;">${entryTime}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 5px 0; font-weight: 600;">Exit:</td>
+                    <td style="text-align: right; font-size: 11px;">${exitTime}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 5px 0; font-weight: 600;">Duration:</td>
+                    <td style="text-align: right; color: #e74c3c; font-weight: bold;">${record.duration}</td>
+                </tr>
+            </table>
+            
+            <div style="border-top: 2px dashed #000; padding-top: 15px; text-align: center;">
+                <div style="font-size: 12px; color: #666;">TOTAL AMOUNT</div>
+                <div style="font-size: 32px; font-weight: bold; color: #27ae60;">₱${parseFloat(record.parking_fee).toFixed(2)}</div>
+            </div>
+            
+            <div style="border-top: 1px solid #ccc; margin-top: 15px; padding-top: 15px; text-align: center; font-size: 11px; color: #888;">
+                <div>Thank you for parking with us!</div>
+                <div style="margin-top: 5px;">Generated: ${createdTime}</div>
+                ${record.notes ? '<div style="margin-top: 5px;">Note: ' + record.notes + '</div>' : ''}
+            </div>
+        </div>
+    `;
+    
+    $('#receipt-display-content').html(receiptHTML);
+    $('#view-receipt-modal').fadeIn();
+}
+
+// ==================== CLOSE ON OVERLAY CLICK ====================
+$(document).on('click', '.modal-overlay', function(e) {
+    if ($(e.target).hasClass('modal-overlay')) {
+        $(this).fadeOut();
+    }
+});
