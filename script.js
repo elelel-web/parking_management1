@@ -806,25 +806,30 @@ function filterReportTable(searchValue) {
 }
 
 
-// ==================== MISSING RECEIPT MODAL WITH INPUT FORM ====================
-// Add this to your script.js
+// ==================== COMPLETE FIXED MISSING RECEIPT JAVASCRIPT ====================
+// Replace your existing missing receipt JS with this
 
 $(document).ready(function() {
     
-    // ==================== OPEN MISSING RECEIPT MODAL ====================
-    $('#open-missing-receipt-modal, button:contains("Missing Receipt")').click(function() {
-        $('#missing-receipt-modal').fadeIn();
+    // ==================== OPEN MODAL ====================
+    $(document).on('click', '#open-missing-receipt-modal, button:contains("Missing Receipt")', function() {
+        $('#missing-receipt-modal').fadeIn(300);
         loadMissingReceipts();
     });
     
     // ==================== AUTO-CALCULATE FEE ====================
-    $('#calculate-fee-btn').click(function() {
+    $(document).on('click', '#calculate-fee-btn', function() {
         const vehicleType = $('#missing-vehicle-type').val();
         const entryTime = $('#missing-entry-time').val();
         const exitTime = $('#missing-exit-time').val();
         
-        if (!vehicleType || !entryTime || !exitTime) {
-            alert('Please select vehicle type and enter entry/exit times first');
+        if (!vehicleType) {
+            alert('Please select vehicle type first');
+            return;
+        }
+        
+        if (!entryTime || !exitTime) {
+            alert('Please enter both entry and exit times');
             return;
         }
         
@@ -839,7 +844,7 @@ $(document).ready(function() {
             return;
         }
         
-        // Calculate fee based on vehicle type
+        // Calculate fee
         let fee = 0;
         if (vehicleType === 'two_wheeler') {
             fee = 10; // First hour
@@ -854,11 +859,16 @@ $(document).ready(function() {
         }
         
         $('#missing-fee').val(fee.toFixed(2));
-        showMessage('success', `Fee calculated: ₱${fee.toFixed(2)} for ${hours} hour(s)`);
+        
+        if (typeof showMessage === 'function') {
+            showMessage('success', `Fee calculated: ₱${fee.toFixed(2)} for ${hours} hour(s)`);
+        } else {
+            alert(`Fee calculated: ₱${fee.toFixed(2)} for ${hours} hour(s)`);
+        }
     });
     
-    // ==================== CREATE MISSING RECEIPT RECORD ====================
-    $('#create-missing-receipt-form').submit(function(e) {
+    // ==================== SUBMIT FORM ====================
+    $(document).on('submit', '#create-missing-receipt-form', function(e) {
         e.preventDefault();
         
         // Get form data
@@ -868,18 +878,28 @@ $(document).ready(function() {
             slot_number: $('#missing-slot').val().trim().toUpperCase(),
             entry_time: $('#missing-entry-time').val(),
             exit_time: $('#missing-exit-time').val(),
-            parking_fee: parseFloat($('#missing-fee').val()),
+            parking_fee: parseFloat($('#missing-fee').val()) || 0,
             notes: $('#missing-notes').val().trim() || 'MISSING RECEIPT - MANUAL ENTRY'
         };
         
         // Validate
         if (!formData.vehicle_number || !formData.vehicle_type || !formData.slot_number) {
-            alert('Please fill in all required fields');
+            alert('Please fill in all required fields (Vehicle Number, Type, Slot)');
+            return;
+        }
+        
+        if (!formData.entry_time || !formData.exit_time) {
+            alert('Please enter both entry and exit times');
+            return;
+        }
+        
+        if (formData.parking_fee <= 0) {
+            alert('Please enter a valid parking fee or use Auto-Calculate');
             return;
         }
         
         // Show loading
-        const submitBtn = $(this).find('button[type="submit"]');
+        const submitBtn = $('#create-missing-receipt-form button[type="submit"]');
         const originalText = submitBtn.html();
         submitBtn.html('<i class="fas fa-spinner fa-spin"></i> Creating...').prop('disabled', true);
         
@@ -891,7 +911,11 @@ $(document).ready(function() {
             contentType: 'application/json',
             success: function(response) {
                 if (response.success) {
-                    showMessage('success', 'Missing receipt record created successfully!');
+                    if (typeof showMessage === 'function') {
+                        showMessage('success', 'Missing receipt record created successfully!');
+                    } else {
+                        alert('Missing receipt record created successfully!');
+                    }
                     
                     // Clear form
                     $('#create-missing-receipt-form')[0].reset();
@@ -899,11 +923,12 @@ $(document).ready(function() {
                     // Reload table
                     loadMissingReceipts();
                 } else {
-                    alert('Error: ' + response.message);
+                    alert('Error: ' + (response.message || 'Failed to create record'));
                 }
             },
-            error: function() {
-                alert('Failed to create record. Please try again.');
+            error: function(xhr) {
+                console.error('Error:', xhr);
+                alert('Failed to create record. Please check console and try again.');
             },
             complete: function() {
                 submitBtn.html(originalText).prop('disabled', false);
@@ -915,68 +940,104 @@ $(document).ready(function() {
 
 // ==================== CLOSE MODALS ====================
 function closeMissingReceiptModal() {
-    $('#missing-receipt-modal').fadeOut();
+    $('#missing-receipt-modal').fadeOut(300);
 }
 
 function closeViewReceiptModal() {
-    $('#view-receipt-modal').fadeOut();
+    $('#view-receipt-modal').fadeOut(300);
 }
 
-// ==================== LOAD MISSING RECEIPTS TABLE ====================
+
+// ==================== FIXED LOAD MISSING RECEIPTS ====================
+// Replace your loadMissingReceipts() function with this
+
 function loadMissingReceipts() {
-    $('#missing-receipts-body').html('<tr><td colspan="9" class="no-data"><i class="fas fa-spinner fa-spin"></i> Loading...</td></tr>');
+    console.log('Loading missing receipts...');
+    
+    $('#missing-receipts-body').html('<tr><td colspan="9" style="text-align: center; padding: 25px; color: #999;"><i class="fas fa-spinner fa-spin"></i> Loading...</td></tr>');
     
     $.ajax({
         url: 'api/get_missing_receipts.php',
         method: 'GET',
+        dataType: 'json',
         success: function(response) {
-            if (response.success && response.data.length > 0) {
+            console.log('Response:', response);
+            
+            // Check if we have data
+            if (response.success && response.data && response.data.length > 0) {
+                console.log('Found ' + response.data.length + ' records');
                 displayMissingReceiptsTable(response.data);
                 updateMissingSummary(response.summary);
             } else {
-                $('#missing-receipts-body').html('<tr><td colspan="9" class="no-data">No missing receipt records yet. Create one using the form above.</td></tr>');
+                console.log('No records found');
+                $('#missing-receipts-body').html('<tr><td colspan="9" style="text-align: center; padding: 25px; color: #999; font-style: italic; font-size: 13px;">No missing receipt records yet. Create one using the form above.</td></tr>');
                 updateMissingSummary({ count: 0, total: 0 });
             }
         },
-        error: function() {
-            $('#missing-receipts-body').html('<tr><td colspan="9" class="no-data" style="color: #e74c3c;">Failed to load. Please try again.</td></tr>');
+        error: function(xhr, status, error) {
+            console.error('AJAX Error:', status, error);
+            console.error('Response:', xhr.responseText);
+            $('#missing-receipts-body').html('<tr><td colspan="9" style="text-align: center; padding: 25px; color: #e74c3c;">Failed to load data. Error: ' + error + '</td></tr>');
         }
     });
 }
 
-// ==================== DISPLAY TABLE ====================
+// ==================== DISPLAY TABLE (UPDATED) ====================
 function displayMissingReceiptsTable(records) {
+    console.log('Displaying ' + records.length + ' records');
+    
     const tbody = $('#missing-receipts-body');
     tbody.empty();
     
-    records.forEach(record => {
-        const entryTime = new Date(record.entry_time).toLocaleString();
-        const exitTime = new Date(record.exit_time).toLocaleString();
+    if (!records || records.length === 0) {
+        tbody.html('<tr><td colspan="9" style="text-align: center; padding: 25px; color: #999;">No records to display</td></tr>');
+        return;
+    }
+    
+    records.forEach(function(record) {
+        console.log('Processing record:', record);
+        
+        const entryTime = new Date(record.entry_time).toLocaleString('en-US', {
+            month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+        });
+        const exitTime = new Date(record.exit_time).toLocaleString('en-US', {
+            month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+        });
         const fee = parseFloat(record.parking_fee).toFixed(2);
         
-        const row = `
-            <tr>
-                <td style="font-weight: bold; color: #3498db;">#${String(record.id).padStart(6, '0')}</td>
-                <td style="font-weight: bold;">${record.vehicle_number}</td>
-                <td>${record.vehicle_type.replace('_', ' ').toUpperCase()}</td>
-                <td><span style="background: #3498db; color: white; padding: 3px 8px; border-radius: 4px; font-size: 12px;">${record.slot_number}</span></td>
-                <td style="font-size: 12px;">${entryTime}</td>
-                <td style="font-size: 12px;">${exitTime}</td>
-                <td>${record.duration}</td>
-                <td style="font-weight: bold; color: #27ae60;">₱${fee}</td>
-                <td>
-                    <button class="btn btn-sm btn-primary" onclick='viewReceipt(${JSON.stringify(record).replace(/'/g, "&apos;")})'>
+        const row = $(`
+            <tr style="border-bottom: 1px solid #e0e0e0;">
+                <td style="padding: 10px 8px; font-size: 12px; font-weight: bold; color: #3498db;">#${String(record.id).padStart(6, '0')}</td>
+                <td style="padding: 10px 8px; font-size: 12px; font-weight: bold;">${record.vehicle_number}</td>
+                <td style="padding: 10px 8px; font-size: 12px;">${record.vehicle_type.replace('_', ' ').toUpperCase()}</td>
+                <td style="padding: 10px 8px; font-size: 12px;"><span style="background: #3498db; color: white; padding: 2px 7px; border-radius: 3px; font-size: 11px;">${record.slot_number}</span></td>
+                <td style="padding: 10px 8px; font-size: 11px;">${entryTime}</td>
+                <td style="padding: 10px 8px; font-size: 11px;">${exitTime}</td>
+                <td style="padding: 10px 8px; font-size: 12px;">${record.duration}</td>
+                <td style="padding: 10px 8px; font-size: 12px; font-weight: bold; color: #27ae60;">₱${fee}</td>
+                <td style="padding: 10px 8px; text-align: center;">
+                    <button class="btn-view-receipt" style="padding: 6px 12px; font-size: 11px; border: none; background: #007bff; color: white; border-radius: 4px; cursor: pointer;">
                         <i class="fas fa-eye"></i> View
                     </button>
                 </td>
             </tr>
-        `;
+        `);
+        
+        // Attach click event with proper data
+        row.find('.btn-view-receipt').on('click', function() {
+            console.log('Viewing receipt for:', record);
+            viewReceipt(record);
+        });
+        
         tbody.append(row);
     });
+    
+    console.log('Table populated with ' + records.length + ' rows');
 }
 
 // ==================== UPDATE SUMMARY ====================
 function updateMissingSummary(summary) {
+    console.log('Updating summary:', summary);
     $('#missing-receipts-count').text(summary.count || 0);
     $('#missing-receipts-total').text('₱' + parseFloat(summary.total || 0).toFixed(2));
 }
@@ -985,68 +1046,68 @@ function updateMissingSummary(summary) {
 function viewReceipt(record) {
     const entryTime = new Date(record.entry_time).toLocaleString();
     const exitTime = new Date(record.exit_time).toLocaleString();
-    const createdTime = new Date().toLocaleString();
+    const now = new Date().toLocaleString();
     
     const receiptHTML = `
-        <div style="font-family: 'Courier New', monospace; padding: 20px; border: 2px solid #ddd; border-radius: 8px;">
-            <div style="text-align: center; border-bottom: 2px dashed #000; padding-bottom: 15px; margin-bottom: 15px;">
-                <h2 style="margin: 0; font-size: 20px;">PARKING RECEIPT</h2>
-                <div style="background: #ffc107; color: #856404; padding: 5px; margin: 10px 0; font-weight: bold;">
+        <div style="font-family: 'Courier New', monospace; padding: 18px; border: 2px solid #ddd; border-radius: 8px;">
+            <div style="text-align: center; border-bottom: 2px dashed #000; padding-bottom: 12px; margin-bottom: 12px;">
+                <h2 style="margin: 0; font-size: 19px;">PARKING RECEIPT</h2>
+                <div style="background: #ffc107; color: #856404; padding: 4px 8px; margin: 8px 0; font-weight: bold; border-radius: 4px; font-size: 12px;">
                     MISSING RECEIPT - REPLACEMENT
                 </div>
             </div>
             
-            <div style="text-align: center; margin-bottom: 15px;">
-                Receipt #<span style="font-weight: bold; font-size: 18px;">${String(record.id).padStart(6, '0')}</span>
+            <div style="text-align: center; margin-bottom: 12px;">
+                Receipt #<span style="font-weight: bold; font-size: 17px;">${String(record.id).padStart(6, '0')}</span>
             </div>
             
-            <table style="width: 100%; font-size: 13px; margin-bottom: 15px;">
+            <table style="width: 100%; font-size: 12px; margin-bottom: 12px;">
                 <tr>
-                    <td style="padding: 5px 0; font-weight: 600;">Vehicle:</td>
+                    <td style="padding: 4px 0; font-weight: 600;">Vehicle:</td>
                     <td style="text-align: right; font-weight: bold;">${record.vehicle_number}</td>
                 </tr>
                 <tr>
-                    <td style="padding: 5px 0; font-weight: 600;">Type:</td>
+                    <td style="padding: 4px 0; font-weight: 600;">Type:</td>
                     <td style="text-align: right;">${record.vehicle_type.replace('_', ' ').toUpperCase()}</td>
                 </tr>
                 <tr>
-                    <td style="padding: 5px 0; font-weight: 600;">Slot:</td>
+                    <td style="padding: 4px 0; font-weight: 600;">Slot:</td>
                     <td style="text-align: right;">${record.slot_number}</td>
                 </tr>
                 <tr>
-                    <td style="padding: 5px 0; font-weight: 600;">Entry:</td>
+                    <td style="padding: 4px 0; font-weight: 600;">Entry:</td>
                     <td style="text-align: right; font-size: 11px;">${entryTime}</td>
                 </tr>
                 <tr>
-                    <td style="padding: 5px 0; font-weight: 600;">Exit:</td>
+                    <td style="padding: 4px 0; font-weight: 600;">Exit:</td>
                     <td style="text-align: right; font-size: 11px;">${exitTime}</td>
                 </tr>
                 <tr>
-                    <td style="padding: 5px 0; font-weight: 600;">Duration:</td>
+                    <td style="padding: 4px 0; font-weight: 600;">Duration:</td>
                     <td style="text-align: right; color: #e74c3c; font-weight: bold;">${record.duration}</td>
                 </tr>
             </table>
             
-            <div style="border-top: 2px dashed #000; padding-top: 15px; text-align: center;">
-                <div style="font-size: 12px; color: #666;">TOTAL AMOUNT</div>
-                <div style="font-size: 32px; font-weight: bold; color: #27ae60;">₱${parseFloat(record.parking_fee).toFixed(2)}</div>
+            <div style="border-top: 2px dashed #000; padding-top: 12px; text-align: center;">
+                <div style="font-size: 11px; color: #666; margin-bottom: 4px;">TOTAL AMOUNT</div>
+                <div style="font-size: 28px; font-weight: bold; color: #27ae60;">₱${parseFloat(record.parking_fee).toFixed(2)}</div>
             </div>
             
-            <div style="border-top: 1px solid #ccc; margin-top: 15px; padding-top: 15px; text-align: center; font-size: 11px; color: #888;">
+            <div style="border-top: 1px solid #ccc; margin-top: 12px; padding-top: 10px; text-align: center; font-size: 10px; color: #888;">
                 <div>Thank you for parking with us!</div>
-                <div style="margin-top: 5px;">Generated: ${createdTime}</div>
-                ${record.notes ? '<div style="margin-top: 5px;">Note: ' + record.notes + '</div>' : ''}
+                <div style="margin-top: 4px;">Generated: ${now}</div>
+                ${record.notes ? '<div style="margin-top: 4px;">Note: ' + record.notes + '</div>' : ''}
             </div>
         </div>
     `;
     
     $('#receipt-display-content').html(receiptHTML);
-    $('#view-receipt-modal').fadeIn();
+    $('#view-receipt-modal').fadeIn(300);
 }
 
 // ==================== CLOSE ON OVERLAY CLICK ====================
 $(document).on('click', '.modal-overlay', function(e) {
     if ($(e.target).hasClass('modal-overlay')) {
-        $(this).fadeOut();
+        $(this).fadeOut(300);
     }
 });
